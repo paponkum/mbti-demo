@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { chownSync } from "fs";
+import { useEffect, useState } from "react";
 
 const questions = [
   { id: 1, text: 'When you are at a social event, you typically:', options: [{ text: 'Enjoy being the center of attention and talking to many people.', value: 'E' }, { text: 'Prefer to have deep conversations with a few people you know well.', value: 'I' }] },
@@ -21,8 +22,13 @@ type Answer = {
 export default function Home() {
   const [questionID, setQuestionID] = useState(0);
   const [answers, setAnswers] = useState<Answer[]>([]);
-  const [result, setResult] = useState<string>("");
+  const [result, setResult] = useState<string>();
 
+  useEffect(() => {
+    if (questionID > questions.length) {
+      calculateMBTI();
+    }
+  }, [questionID])
   const handleChange = (questionID: number, optionValue: string) => {
     const newAnswers = [...answers];
     newAnswers.push({
@@ -30,17 +36,21 @@ export default function Home() {
       ans: optionValue
     })
     setAnswers(newAnswers);
-    calculateMBTI();
-    setQuestionID(questionID + 1)
-    
+    if (questionID)
+      setQuestionID(questionID + 1)
   };
 
+  const restartQuiz = () => {
+    setAnswers([]);
+    setResult(undefined);
+    setQuestionID(0);
+  }
   const calculateMBTI = () => {
     const counts = { E: 0, I: 0, S: 0, N: 0, T: 0, F: 0, J: 0, P: 0 };
 
     answers.forEach(answer => {
       if (answer) {
-        switch(answer.ans) {
+        switch (answer.ans) {
           case 'E':
             counts.E++;
             break;
@@ -99,7 +109,7 @@ export default function Home() {
           {questionID > questions.length &&
             <>
               <h2 className="text-center mb-4">Your MBTI is {result}</h2>
-              <button className="btn bg-transparent hover:bg-blue-500 text-blue-700 hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded mb-2" onClick={() => setQuestionID(0)}>Restart</button>
+              <button className="btn bg-transparent hover:bg-blue-500 text-blue-700 hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded mb-2" onClick={() => restartQuiz}>Restart</button>
             </>
           }
         </div>
